@@ -5,40 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Ticketing System</title>
     
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --primary-color: #ff6ec7; /* Pink */
-            --secondary-color: #9d4edd; /* Purple */
-            --tertiary-color: #4361ee; /* Blue */
-            --background-color: #1a1a2e; /* Dark blue */
-            --text-color: #e6e6e6;
-            --card-bg: #16213e;
-            --success-color: #4cc9f0; /* Cyan */
-            --warning-color: #f8961e; /* Orange */
-            --danger-color: #f72585; /* Magenta */
-            --light-gray: #2d3047;
-            --dark-accent: #0f1419;
+            --bg-deep: #050505;
+            --bg-surface: #0f0f0f;
+            --bg-card: rgba(20, 20, 20, 0.6);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --accent-color: #ffffff; 
+            --accent-secondary: #3b82f6;
+            --glass-backdrop: blur(20px);
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--background-color), var(--dark-accent));
-            color: var(--text-color);
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
             line-height: 1.6;
             min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%), 
+                radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.03), transparent 25%);
+        }
+
+        button {
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            border: none;
+            outline: none;
         }
 
         .app-container {
-            max-width: 1200px;
+            max-width: 1100px;
             margin: 0 auto;
-            padding: 20px;
-            display: none; /* Hidden until logged in */
+            padding: 40px 20px;
+            display: none; 
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* --- Login Overlay --- */
@@ -48,7 +70,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, var(--background-color), var(--dark-accent));
+            background: var(--bg-deep);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -57,848 +79,552 @@
         }
 
         .login-box {
-            background: var(--card-bg);
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255, 110, 199, 0.3);
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: var(--glass-backdrop);
+            padding: 4rem 3rem;
+            border-radius: 24px;
+            border: 1px solid var(--border-subtle);
             text-align: center;
-            max-width: 450px;
+            max-width: 420px;
             width: 100%;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .login-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 5px;
-            background: linear-gradient(90deg, var(--primary-color), var(--tertiary-color));
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
         .login-box h2 {
-            margin-bottom: 1.5rem;
-            color: var(--primary-color);
+            font-weight: 300;
+            letter-spacing: -0.5px;
             font-size: 2rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .login-box p {
-            margin-bottom: 2rem;
-            color: #aaa;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            font-weight: 300;
         }
 
-        .login-box input {
+        .premium-input {
             width: 100%;
-            padding: 14px;
+            padding: 16px 20px;
             margin-bottom: 1rem;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
             color: white;
             font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+            transition: var(--transition);
         }
 
-        .login-box button {
+        .premium-input:focus {
+            border-color: var(--accent-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .premium-btn {
             width: 100%;
-            padding: 14px;
-            border-radius: 8px;
-            border: none;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            font-weight: bold;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: transform 0.2s;
+            padding: 16px;
+            border-radius: 12px;
+            background: white;
+            color: black;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
             margin-top: 10px;
         }
 
-        .login-box button:hover {
-            transform: scale(1.02);
+        .premium-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
         }
         
-        #auth-error {
-            color: var(--danger-color);
-            margin-top: 15px;
-            display: none;
-            padding: 10px;
-            background: rgba(247, 37, 133, 0.1);
-            border-radius: 5px;
-            border: 1px solid var(--danger-color);
+        .premium-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         /* --- Header & Nav --- */
         header {
             text-align: center;
-            margin-bottom: 2rem;
-            position: relative;
+            margin-bottom: 4rem;
         }
 
         header h1 {
-            margin-bottom: 0.5rem;
-            color: var(--primary-color);
-            font-size: 2.5rem;
-            text-shadow: 0 0 10px rgba(255, 110, 199, 0.5);
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            font-weight: 200;
+            letter-spacing: -2px;
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(180deg, #fff 0%, #aaa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
         
         .user-info-bar {
-            display: flex;
-            justify-content: space-between;
+            display: inline-flex;
             align-items: center;
-            background: rgba(0,0,0,0.2);
-            padding: 10px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
+            gap: 20px;
+            background: rgba(255,255,255,0.03);
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 30px;
+            font-size: 0.9rem;
         }
         
         .logout-btn {
             background: transparent;
-            border: 1px solid var(--danger-color);
-            color: var(--danger-color);
-            padding: 5px 15px;
-            border-radius: 5px;
-            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-left: 1px solid var(--border-subtle);
+            padding-left: 15px;
         }
         
-        .logout-btn:hover {
-            background: var(--danger-color);
-            color: white;
-        }
+        .logout-btn:hover { color: white; }
 
-        .sync-status {
-            font-size: 0.9rem;
-            color: var(--success-color);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
         .sync-dot {
-            width: 10px;
-            height: 10px;
-            background-color: var(--success-color);
+            width: 8px;
+            height: 8px;
+            background-color: #10b981; 
             border-radius: 50%;
             display: inline-block;
-            box-shadow: 0 0 8px var(--success-color);
-            animation: pulse-dot 2s infinite;
-        }
-        
-        @keyframes pulse-dot {
-            0% { opacity: 0.5; transform: scale(0.9); }
-            50% { opacity: 1; transform: scale(1.1); }
-            100% { opacity: 0.5; transform: scale(0.9); }
+            box-shadow: 0 0 10px #10b981;
         }
 
         nav {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            background-color: rgba(22, 33, 62, 0.8);
-            padding: 10px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: inline-flex;
+            background: rgba(20, 20, 20, 0.8);
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid var(--border-subtle);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 110, 199, 0.2);
+            gap: 5px;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .nav-btn {
-            padding: 12px 24px;
-            border: none;
-            background-color: transparent;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            color: var(--text-color);
-            position: relative;
-            overflow: hidden;
+            padding: 10px 24px;
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 12px;
+            transition: var(--transition);
+            font-weight: 500;
         }
 
-        .nav-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 110, 199, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .nav-btn:hover::before {
-            left: 100%;
+        .nav-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.05);
         }
 
         .nav-btn.active {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            box-shadow: 0 0 15px rgba(255, 110, 199, 0.5);
+            background: var(--accent-color);
+            color: black;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
         .tab-content {
             display: none;
-            animation: fadeIn 0.5s;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
         .tab-content.active {
             display: block;
+            opacity: 1;
+            transform: translateY(0);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- Form and Ticket --- */
         .form-and-ticket {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+            gap: 3rem;
             align-items: start;
         }
 
-        form {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 110, 199, 0.1);
+        .glass-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 2.5rem;
+            backdrop-filter: var(--glass-backdrop);
         }
 
-        form h2 {
-            margin-bottom: 1.5rem;
-            text-align: center;
-            color: var(--primary-color);
+        .glass-panel h2 {
+            font-weight: 400;
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 15px;
         }
 
-        form input, form select {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 1rem;
-            border: 1px solid rgba(255, 110, 199, 0.3);
-            border-radius: 8px;
-            font-size: 1rem;
-            background-color: var(--light-gray);
-            color: var(--text-color);
-            transition: all 0.3s ease;
-        }
-
-        form input:focus, form select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 10px rgba(255, 110, 199, 0.3);
-        }
-
-        .phone-input {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        .phone-input span {
-            padding: 12px;
-            background: linear-gradient(135deg, var(--secondary-color), var(--tertiary-color));
-            border: 1px solid rgba(255, 110, 199, 0.3);
-            border-right: none;
-            border-radius: 8px 0 0 8px;
-            color: white;
-            height: 44px;
-            display: flex;
-            align-items: center;
-        }
-        .phone-input input {
-            border-radius: 0 8px 8px 0;
-            margin-bottom: 0;
-            flex: 1;
-        }
-
-        form button, .booked-controls button, .ticket-actions button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(157, 78, 221, 0.3);
-        }
-
-        form button:hover, .booked-controls button:hover, .ticket-actions button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(157, 78, 221, 0.5);
-        }
-        .ticket-actions button:disabled {
-            background: var(--light-gray);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-            opacity: 0.7;
-        }
-
-        .ticket-preview-container {
-            padding: 2rem;
-            background: var(--card-bg);
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 110, 199, 0.1);
-        }
-
+        /* Ticket Design */
         #ticketTemplate {
-            border: 2px dashed var(--primary-color);
-            border-radius: 15px;
-            padding: 20px;
-            background: linear-gradient(135deg, var(--card-bg), var(--light-gray));
-            margin-bottom: 1rem;
+            background: #000;
+            border-radius: 20px;
+            padding: 0;
             position: relative;
             overflow: hidden;
             width: 100%;
+            color: white;
+            border: 1px solid #333;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
         #ticketTemplate::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,110,199,0.1) 0%, rgba(157,78,221,0.05) 50%, transparent 70%);
-            animation: pulse 4s infinite linear;
-            z-index: 0;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #fff, #3b82f6);
         }
 
-        @keyframes pulse {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .ticket-header, .ticket-footer {
-            text-align: center;
+        .ticket-content-wrapper {
+            padding: 30px;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
+
         .ticket-header {
-            border-bottom: 1px solid rgba(255, 110, 199, 0.3);
-            padding-bottom: 10px;
-            margin-bottom: 10px;
+            text-align: center;
+            margin-bottom: 2rem;
         }
-        .ticket-footer {
-            border-top: 1px solid rgba(255, 110, 199, 0.3);
-            padding-top: 10px;
-            margin-top: 10px;
-            font-size: 0.8rem;
-            color: #aaa;
+        
+        .ticket-header h3 {
+            font-weight: 700;
+            letter-spacing: 3px;
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        
+        .ticket-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .ticket-body {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            position: relative;
-            z-index: 1;
         }
 
-        .ticket-details {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+        .ticket-info-row {
+            margin-bottom: 15px;
         }
 
-        .ticket-details div {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .ticket-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #666;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 2px;
         }
-
-        .ticket-details strong {
-            min-width: 80px;
-            color: var(--primary-color);
+        
+        .ticket-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: white;
         }
 
         .ticket-qr {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-width: 140px;
-            min-height: 140px;
             background: white;
-            border-radius: 8px;
             padding: 10px;
-            margin-left: 10px;
+            border-radius: 10px;
         }
-        #qrcode img {
-            width: 120px;
-            height: 120px;
+        
+        .ticket-footer {
+            border-top: 1px dashed #333;
+            padding: 15px 30px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #555;
+            background: #080808;
         }
 
-        .ticket-serial {
+        .serial-pill {
+            display: inline-block;
+            background: #111;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: monospace;
+            border: 1px solid #333;
             margin-top: 10px;
             font-size: 0.8rem;
-            color: #777;
-            text-align: center;
-            word-break: break-all;
+            color: #888;
         }
 
-        .ticket-actions {
-            display: flex;
-            gap: 1rem;
+        /* --- Tables --- */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 20px;
+            border: 1px solid var(--border-subtle);
         }
 
-        /* --- Booked Tickets Tab --- */
-        #booked h2, #scanner h2, #settings h2 {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            color: var(--primary-color);
-        }
-
-        .booked-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 1rem;
-        }
-        .booked-controls button { 
-            width: auto; 
-            padding: 10px 20px; 
-            border-radius: 8px;
-        }
-        #deleteBtn { 
-            background: linear-gradient(135deg, var(--danger-color), #b5179e);
-        }
-        #deleteBtn:hover { 
-            box-shadow: 0 6px 20px rgba(247, 37, 133, 0.5);
-        }
-
-        /* Table style for booked tickets */
-        .tickets-table {
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1rem;
-            background: var(--card-bg);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            background: var(--bg-card);
         }
 
-        .tickets-table th {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            padding: 12px 15px;
+        th {
+            background: rgba(255,255,255,0.05);
+            padding: 18px;
             text-align: left;
-            font-weight: 600;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .tickets-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(255, 110, 199, 0.1);
+        td {
+            padding: 18px;
+            border-bottom: 1px solid var(--border-subtle);
+            font-weight: 300;
         }
 
-        .tickets-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .tickets-table tr:hover {
-            background-color: rgba(255, 110, 199, 0.05);
+        tr:last-child td { border-bottom: none; }
+        
+        tr:hover td {
+            background: rgba(255,255,255,0.02);
         }
 
         .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-weight: bold;
-            color: white;
-            text-align: center;
-            display: inline-block;
-            min-width: 100px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-            font-size: 0.85rem;
-        }
-
-        .status-coming-soon { 
-            background: linear-gradient(135deg, var(--warning-color), #f3722c);
-        }
-        .status-arrived { 
-            background: linear-gradient(135deg, var(--success-color), #4895ef);
-        }
-        .status-didnt-come { 
-            background: linear-gradient(135deg, var(--danger-color), #b5179e);
-        }
-
-        .view-ticket-btn {
-            padding: 6px 12px;
-            background: linear-gradient(135deg, var(--tertiary-color), #3a0ca3);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: auto;
-        }
-
-        .view-ticket-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.5);
-        }
-
-        .select-all-container {
-            padding: 10px;
-            background: var(--light-gray);
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: none;
-        }
-
-        /* --- Settings Tab --- */
-        .settings-form {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 110, 199, 0.1);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .settings-form h3 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .settings-form label {
-            display: block;
-            margin-bottom: 0.5rem;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.75rem;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .settings-form input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 1rem;
-            border: 1px solid rgba(255, 110, 199, 0.3);
+        .status-coming-soon { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .status-arrived { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-didnt-come { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+        .action-btn-small {
+            padding: 6px 14px;
             border-radius: 8px;
-            background-color: var(--light-gray);
-            color: var(--text-color);
-        }
-
-        .settings-form button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: rgba(255,255,255,0.1);
             color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(157, 78, 221, 0.3);
-            margin-bottom: 1rem;
+            font-size: 0.8rem;
+            transition: var(--transition);
         }
+        
+        .action-btn-small:hover { background: white; color: black; }
 
-        .settings-form button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(157, 78, 221, 0.5);
-        }
-
-        .current-settings {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: var(--light-gray);
-            border-radius: 10px;
-        }
-
-        .current-settings h4 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        /* --- Scanner --- */
         #scanner-container {
             position: relative;
             width: 100%;
-            max-width: 500px;
-            margin: 0 auto 1rem auto;
-            border-radius: 15px;
+            max-width: 480px;
+            margin: 0 auto 2rem auto;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         #scanner-video {
             width: 100%;
             height: auto;
             display: block;
-            border-radius: 15px;
+            opacity: 0.8;
         }
 
-        .scanner-box {
+        .scanner-overlay {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 70%;
-            height: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            border: 3px solid rgba(255, 110, 199, 0.8);
-            box-shadow: 0 0 0 4000px rgba(0,0,0,0.5);
-            border-radius: 10px;
+            width: 250px; height: 250px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.8);
         }
-
-        #startScanBtn {
-            display: block;
-            margin: 1rem auto;
-            width: auto;
-            padding: 10px 30px;
-            border-radius: 8px;
+        
+        .scanner-overlay::after {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            border-radius: 20px;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.8) 50%, transparent 60%);
+            background-size: 200% 200%;
+            animation: scanGlow 3s infinite linear;
+            z-index: 2;
+            opacity: 0.5;
         }
+        
+        @keyframes scanGlow { 0% { background-position: 100% 0; } 100% { background-position: 0 100%; } }
 
-        #scanResult {
-            text-align: center;
-            margin-top: 1rem;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .result-success { 
-            background: linear-gradient(135deg, rgba(76, 201, 240, 0.2), rgba(72, 149, 239, 0.2)); 
-            color: #4cc9f0;
-            border: 1px solid rgba(76, 201, 240, 0.3);
-        }
-
-        .result-error { 
-            background: linear-gradient(135deg, rgba(247, 37, 133, 0.2), rgba(181, 23, 158, 0.2)); 
-            color: #f72585;
-            border: 1px solid rgba(247, 37, 133, 0.3);
-        }
-
-        .result-info { 
-            background: linear-gradient(135deg, rgba(67, 97, 238, 0.2), rgba(58, 12, 163, 0.2)); 
-            color: var(--tertiary-color);
-            border: 1px solid rgba(67, 97, 238, 0.3);
-        }
-
-        /* --- Mobile Responsiveness --- */
         @media (max-width: 768px) {
-            .form-and-ticket {
-                grid-template-columns: 1fr;
-            }
-
-            nav {
-                flex-wrap: wrap;
-            }
-            
-            .tickets-table {
-                display: block;
-                overflow-x: auto;
-            }
-
-            header h1 {
-                font-size: 2rem;
-            }
-            
-            .ticket-body {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .ticket-qr {
-                margin: 15px 0 0 0;
-            }
-            
-            .ticket-details div {
-                justify-content: center;
-            }
-        }
-
-        /* Floating Elements */
-        .floating-element {
-            position: fixed;
-            width: 100px;
-            height: 100px;
-            background: radial-gradient(circle, rgba(255,110,199,0.2) 0%, transparent 70%);
-            border-radius: 50%;
-            z-index: -1;
-            animation: float 15s infinite linear;
-        }
-
-        .floating-element:nth-child(1) { top: 10%; left: 5%; width: 150px; height: 150px; animation-duration: 20s; }
-        .floating-element:nth-child(2) { top: 70%; right: 10%; width: 120px; height: 120px; animation-duration: 25s; animation-delay: 5s; }
-        .floating-element:nth-child(3) { bottom: 20%; left: 15%; width: 80px; height: 80px; animation-duration: 18s; animation-delay: 10s; }
-
-        @keyframes float {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(20px, 20px) rotate(90deg); }
-            50% { transform: translate(0, 40px) rotate(180deg); }
-            75% { transform: translate(-20px, 20px) rotate(270deg); }
-            100% { transform: translate(0, 0) rotate(360deg); }
+            .form-and-ticket { grid-template-columns: 1fr; }
+            header h1 { font-size: 2.2rem; }
+            .login-box { padding: 2rem; }
+            .nav-btn { flex: 1; text-align: center; font-size: 0.9rem; }
         }
     </style>
 </head>
 <body>
-    <div class="floating-element"></div>
-    <div class="floating-element"></div>
-    <div class="floating-element"></div>
 
-    <!-- Login Overlay -->
     <div id="login-overlay">
         <div class="login-box">
-            <h2>Authorized Login</h2>
-            <p>Log in with your administrator credentials to access the dashboard.</p>
-            <input type="email" id="emailInput" placeholder="Email Address">
-            <input type="password" id="passwordInput" placeholder="Password">
-            <button id="loginButton">Log In</button>
-            <p id="auth-error"></p>
-            <p style="margin-top: 15px; font-size: 0.8rem; color: #666;">
-                *Public registration is disabled. Contact admin for access.
-            </p>
+            <h2>Authorized Access</h2>
+            <p>Please verify your identity to continue.</p>
+            <input type="email" id="emailInput" class="premium-input" placeholder="Administrator Email">
+            <input type="password" id="passwordInput" class="premium-input" placeholder="Password">
+            <button id="loginButton" class="premium-btn">Authenticate</button>
+            <div id="auth-error" style="color: #ef4444; font-size: 0.9rem; margin-top: 15px; display: none;"></div>
         </div>
     </div>
 
-    <!-- Main App -->
     <div class="app-container" id="appContent">
         <header>
-            <h1>Event Ticketing System</h1>
+            <h1>Ticketing<span style="font-weight: 600;">System</span>.</h1>
             <div class="user-info-bar">
-                <div class="sync-status">
-                    <span class="sync-dot"></span> <span id="syncText">Connected as <span id="userEmailDisplay">...</span></span>
-                </div>
-                <button id="logoutBtn" class="logout-btn">Log Out</button>
+                <span class="sync-dot"></span> 
+                <span id="syncText">Connected as <span id="userEmailDisplay" style="color: white; font-weight: 500;">...</span></span>
+                <button id="logoutBtn" class="logout-btn">Sign Out</button>
             </div>
             <nav>
-                <button class="nav-btn active" data-tab="create">Create Ticket</button>
-                <button class="nav-btn" data-tab="booked">Booked Tickets</button>
-                <button class="nav-btn" data-tab="scanner">Validate Entry</button>
-                <button class="nav-btn" data-tab="settings">Settings</button>
+                <button class="nav-btn active" data-tab="create">Issue Ticket</button>
+                <button class="nav-btn" data-tab="booked">Guest List</button>
+                <button class="nav-btn" data-tab="scanner">Scanner</button>
+                <button class="nav-btn" data-tab="settings">Configuration</button>
             </nav>
         </header>
 
         <main>
-            <!-- Create Ticket -->
             <div id="create" class="tab-content active">
                 <div class="form-and-ticket">
-                    <form id="ticketForm">
-                        <h2>Enter Attendee Details</h2>
-                        <input type="text" id="name" placeholder="Full Name" required>
-                        <select id="gender" required>
-                            <option value="" disabled selected>Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <input type="number" id="age" placeholder="Age" required min="1">
-                        <div class="phone-input">
-                            <span>+91</span>
-                            <input type="tel" id="phone" placeholder="Phone Number (10 digits)" required pattern="[0-9]{10}">
-                        </div>
-                        <button type="submit" style="margin-top: 15px !important;">Generate Ticket</button>
-                    </form>
-
-                    <div class="ticket-preview-container">
-                        <h2>Ticket Preview</h2>
-                        <div id="ticketTemplate">
-                            <div class="ticket-header">
-                                <h3>EVENT ENTRY PASS</h3>
-                                <p id="eventNamePlace"></p>
+                    <div class="glass-panel">
+                        <h2>New Guest Entry</h2>
+                        <form id="ticketForm">
+                            <input type="text" id="name" class="premium-input" placeholder="Full Name" required>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="gender" class="premium-input" style="flex: 1;" required>
+                                    <option value="" disabled selected>Gender</option>
+                                    <option value="Male" style="color: black;">Male</option>
+                                    <option value="Female" style="color: black;">Female</option>
+                                    <option value="Other" style="color: black;">Other</option>
+                                </select>
+                                <input type="number" id="age" class="premium-input" placeholder="Age" style="flex: 1;" required min="1">
                             </div>
-                            <div class="ticket-body">
-                                <div class="ticket-details">
-                                    <div><span id="ticketName"></span></div>
-                                    <div><span id="ticketAgeGender"></span></div>
-                                    <div><span id="ticketPhone"></span></div>
+                            <input type="tel" id="phone" class="premium-input" placeholder="Phone (10 Digits)" required pattern="[0-9]{10}">
+                            <button type="submit" class="premium-btn">Generate Pass</button>
+                        </form>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div id="ticketTemplate">
+                            <div class="ticket-content-wrapper">
+                                <div class="ticket-header">
+                                    <h3>VIP Access Pass</h3>
+                                    <p id="eventNamePlace">Event Details Loading...</p>
                                 </div>
-                                <div class="ticket-qr">
-                                    <div id="qrcode"></div>
-                                    <div class="ticket-serial" id="ticketSerial"></div>
+                                <div class="ticket-body">
+                                    <div class="ticket-details">
+                                        <div class="ticket-info-row">
+                                            <span class="ticket-label">Guest Name</span>
+                                            <span class="ticket-value" id="ticketName">--</span>
+                                        </div>
+                                        <div class="ticket-info-row">
+                                            <span class="ticket-label">Profile</span>
+                                            <span class="ticket-value" id="ticketAgeGender">-- / --</span>
+                                        </div>
+                                        <div class="ticket-info-row">
+                                            <span class="ticket-label">Contact</span>
+                                            <span class="ticket-value" id="ticketPhone">--</span>
+                                        </div>
+                                        <div class="serial-pill" id="ticketSerial">ID: --</div>
+                                    </div>
+                                    <div class="ticket-qr">
+                                        <div id="qrcode"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="ticket-footer">
-                                <p>Please present this ticket at the entry.</p>
+                                SCAN THIS CODE AT THE ENTRANCE FOR ADMISSION
                             </div>
                         </div>
-                        <div class="ticket-actions">
-                            <button id="whatsappBtn" disabled>Share on WhatsApp</button>
-                        </div>
+                        <button id="whatsappBtn" class="premium-btn" style="background: #25D366; color: white; border: none;" disabled>
+                            Save & Open WhatsApp
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Booked Tickets -->
             <div id="booked" class="tab-content">
-                <h2>All Booked Tickets</h2>
-                <div class="booked-controls">
-                    <button id="selectBtn">Select</button>
-                    <button id="deleteBtn" style="display: none;">Delete Selected</button>
+                <div class="glass-panel" style="padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
+                        <h2 style="border: none; margin: 0;">Guest List</h2>
+                        <div class="booked-controls">
+                            <button id="selectBtn" class="action-btn-small">Select</button>
+                            <button id="deleteBtn" class="action-btn-small" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; display: none;">Delete</button>
+                        </div>
+                    </div>
+                    
+                    <div class="select-all-container" style="display: none; padding: 10px; background: rgba(255,255,255,0.05); margin-bottom: 15px; border-radius: 8px;">
+                        <input type="checkbox" id="selectAllCheckbox"> <label for="selectAllCheckbox" style="margin-left: 10px; font-size: 0.9rem;">Select All Rows</label>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="tickets-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Guest</th>
+                                    <th>Details</th>
+                                    <th>Contact</th>
+                                    <th>Serial</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookedTicketsTable">
+                                <tr><td colspan="7" style="text-align:center; padding: 30px; color: #666;">Loading data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="select-all-container" style="display: none;">
-                    <input type="checkbox" id="selectAllCheckbox">
-                    <label for="selectAllCheckbox">Select All</label>
-                </div>
-                
-                <table class="tickets-table">
-                    <thead>
-                        <tr>
-                            <th>Select</th>
-                            <th>Name</th>
-                            <th>Age/Gender</th>
-                            <th>Phone</th>
-                            <th>Ticket ID</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bookedTicketsTable">
-                        <tr><td colspan="7" style="text-align:center; padding: 20px;">Loading...</td></tr>
-                    </tbody>
-                </table>
             </div>
 
-            <!-- Scanner -->
             <div id="scanner" class="tab-content">
-                <h2>QR Code Scanner</h2>
-                <div id="scanner-container">
-                    <video id="scanner-video" playsinline></video>
-                    <div class="scanner-box"></div>
+                <div class="glass-panel" style="text-align: center;">
+                    <h2>Entry Validation</h2>
+                    <div id="scanner-container">
+                        <video id="scanner-video" playsinline></video>
+                        <div class="scanner-overlay"></div>
+                    </div>
+                    <button id="startScanBtn" class="premium-btn" style="width: auto; padding: 12px 30px;">Activate Camera</button>
+                    <div id="scanResult" style="margin-top: 20px; padding: 15px; border-radius: 12px; display: none;"></div>
                 </div>
-                <button id="startScanBtn">Start Camera</button>
-                <div id="scanResult">Point camera at a QR code...</div>
             </div>
             
-            <!-- Settings -->
             <div id="settings" class="tab-content">
-                <h2>Event Settings</h2>
-                <div class="settings-form">
-                    <h3>Configure Event Details</h3>
+                <div class="glass-panel" style="max-width: 600px; margin: 0 auto;">
+                    <h2>Configuration</h2>
                     <form id="eventSettingsForm">
-                        <label for="eventName">Event Name</label>
-                        <input type="text" id="eventName" placeholder="Enter event name">
-                        <label for="eventPlace">Event Place</label>
-                        <input type="text" id="eventPlace" placeholder="Enter event place">
-                        <label for="arrivalDeadline">Arrival Deadline</label>
-                        <input type="datetime-local" id="arrivalDeadline">
-                        <button type="submit">Save Settings to Cloud</button>
+                        <label style="display: block; margin-bottom: 5px; color: #888; font-size: 0.85rem; text-transform: uppercase;">Event Name</label>
+                        <input type="text" id="eventName" class="premium-input" placeholder="e.g. Summer Gala 2024">
+                        <label style="display: block; margin-bottom: 5px; color: #888; font-size: 0.85rem; text-transform: uppercase;">Location</label>
+                        <input type="text" id="eventPlace" class="premium-input" placeholder="e.g. Grand Hall">
+                        <label style="display: block; margin-bottom: 5px; color: #888; font-size: 0.85rem; text-transform: uppercase;">Deadline</label>
+                        <input type="datetime-local" id="arrivalDeadline" class="premium-input" style="color-scheme: dark;">
+                        <button type="submit" class="premium-btn">Save Configuration</button>
                     </form>
-                    <div class="current-settings">
-                        <h4>Current Settings (Synced)</h4>
-                        <p><strong>Event Name:</strong> <span id="currentEventName">Loading...</span></p>
-                        <p><strong>Event Place:</strong> <span id="currentEventPlace">Loading...</span></p>
-                        <p><strong>Arrival Deadline:</strong> <span id="currentDeadline">Loading...</span></p>
+                    <div class="current-settings" style="margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 12px;">
+                        <h4 style="margin-bottom: 10px; color: white;">Active Settings</h4>
+                        <p style="font-size: 0.9rem; color: #888; margin-bottom: 5px;"><strong>Event:</strong> <span id="currentEventName" style="color: white;">--</span></p>
+                        <p style="font-size: 0.9rem; color: #888; margin-bottom: 5px;"><strong>Venue:</strong> <span id="currentEventPlace" style="color: white;">--</span></p>
+                        <p style="font-size: 0.9rem; color: #888;"><strong>Time:</strong> <span id="currentDeadline" style="color: white;">--</span></p>
                     </div>
                 </div>
             </div>
@@ -928,12 +654,9 @@
           measurementId: "G-CED9W20PBK"
         };
         
-        // --- INIT FIREBASE ---
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        // Root collection for your events
         const APP_COLLECTION_ROOT = 'ticket_events_data'; 
 
         let currentUser = null;
@@ -950,29 +673,22 @@
         const userEmailDisplay = document.getElementById('userEmailDisplay');
         const logoutBtn = document.getElementById('logoutBtn');
 
-        // --- AUTHENTICATION LOGIC ---
-        
-        // 1. Check Auth State
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Logged In
                 currentUser = user;
                 userEmailDisplay.textContent = user.email;
                 loginOverlay.style.display = 'none';
                 appContent.style.display = 'block';
                 setupRealtimeListeners(user.uid);
             } else {
-                // Logged Out
                 currentUser = null;
                 loginOverlay.style.display = 'flex';
                 appContent.style.display = 'none';
-                // Stop listening
                 if (ticketsUnsubscribe) ticketsUnsubscribe();
                 if (settingsUnsubscribe) settingsUnsubscribe();
             }
         });
 
-        // 2. Login Handler (STRICT MODE - NO REGISTRATION)
         loginButton.addEventListener('click', async () => {
             const email = emailInput.value;
             const password = passwordInput.value;
@@ -986,48 +702,33 @@
             }
 
             try {
-                // STRICT MODE: Only sign in. If user doesn't exist, it fails.
                 await signInWithEmailAndPassword(auth, email, password);
-                
             } catch (error) {
                 console.error("Login failed:", error);
                 if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                    showError("Access Denied: Invalid credentials or account does not exist.");
+                    showError("Access Denied.");
                 } else {
-                    showError(getReadableError(error));
+                    showError(error.message);
                 }
             } finally {
-                 loginButton.textContent = "Log In";
+                 loginButton.textContent = "Authenticate";
                  loginButton.disabled = false;
             }
         });
 
-        logoutBtn.addEventListener('click', () => {
-             signOut(auth);
-        });
+        logoutBtn.addEventListener('click', () => { signOut(auth); });
 
         function showError(msg) {
             authError.textContent = msg;
             authError.style.display = 'block';
-            loginButton.textContent = "Log In";
+            loginButton.textContent = "Authenticate";
             loginButton.disabled = false;
         }
 
-        function getReadableError(error) {
-            if (error.code === 'auth/weak-password') return 'Password should be at least 6 characters.';
-            if (error.code === 'auth/email-already-in-use') return 'Email already exists. Please check password.';
-            if (error.code === 'auth/invalid-email') return 'Invalid email address.';
-            return error.message;
-        }
-
-        // --- APP LOGIC ---
-        
         let bookedTickets = [];
         let eventSettings = { name: '', place: '', deadline: '' };
 
         function setupRealtimeListeners(userId) {
-            // Path: ticket_events_data/{userId}/tickets
-            // This ensures data is private to this account, but shared across devices logged into this account
             const ticketsRef = collection(db, APP_COLLECTION_ROOT, userId, 'tickets');
             const q = query(ticketsRef); 
 
@@ -1036,7 +737,7 @@
                 snapshot.forEach((doc) => {
                     bookedTickets.push({ id: doc.id, ...doc.data() });
                 });
-                bookedTickets.sort((a, b) => b.createdAt - a.createdAt); // Newest first
+                bookedTickets.sort((a, b) => b.createdAt - a.createdAt);
                 renderBookedTickets();
             });
 
@@ -1052,8 +753,6 @@
             });
         }
 
-        // --- UI HANDLERS ---
-        
         const navButtons = document.querySelectorAll('.nav-btn');
         const tabs = document.querySelectorAll('.tab-content');
         
@@ -1074,7 +773,6 @@
             });
         });
 
-        // Settings Form
         const eventSettingsForm = document.getElementById('eventSettingsForm');
         eventSettingsForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1094,18 +792,15 @@
             document.getElementById('currentEventPlace').textContent = eventSettings.place || 'Not set';
             document.getElementById('currentDeadline').textContent = eventSettings.deadline ? new Date(eventSettings.deadline).toLocaleString() : 'Not set';
             
-            // Update preview
             document.getElementById('eventNamePlace').textContent = eventSettings.name && eventSettings.place 
-                ? `${eventSettings.name} - ${eventSettings.place}` 
-                : 'Event details not set';
+                ? `${eventSettings.name} | ${eventSettings.place}` 
+                : 'EVENT DETAILS';
                 
-            // Update inputs
             document.getElementById('eventName').value = eventSettings.name || '';
             document.getElementById('eventPlace').value = eventSettings.place || '';
             document.getElementById('arrivalDeadline').value = eventSettings.deadline || '';
         }
 
-        // Ticket Form
         const ticketForm = document.getElementById('ticketForm');
         ticketForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1134,30 +829,28 @@
             }
         });
 
-        // Ticket Rendering
         const bookedTicketsTable = document.getElementById('bookedTicketsTable');
         function renderBookedTickets() {
             bookedTicketsTable.innerHTML = '';
             if(bookedTickets.length === 0) {
-                bookedTicketsTable.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;">No tickets found.</td></tr>';
+                bookedTicketsTable.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 30px; color: #666;">No guests in database.</td></tr>';
                 return;
             }
             bookedTickets.forEach(ticket => {
                 const tr = document.createElement('tr');
                 tr.dataset.id = ticket.id;
                 tr.innerHTML = `
-                    <td><div class="checkbox-container"><input type="checkbox" class="ticket-checkbox"></div></td>
-                    <td>${ticket.name}</td>
+                    <td><input type="checkbox" class="ticket-checkbox" style="transform: scale(1.2);"></td>
+                    <td style="font-weight: 500; color: white;">${ticket.name}</td>
                     <td>${ticket.age} / ${ticket.gender}</td>
                     <td>${ticket.phone}</td>
-                    <td class="serial">${ticket.id.substring(0, 8)}...</td>
+                    <td style="font-family: monospace; font-size: 0.8rem; color: #888;">${ticket.id.substring(0, 8)}...</td>
                     <td><span class="status-badge status-${ticket.status}">${ticket.status.replace('-', ' ')}</span></td>
-                    <td><button class="view-ticket-btn" data-id="${ticket.id}">View</button></td>
+                    <td><button class="action-btn-small view-ticket-btn" data-id="${ticket.id}">View</button></td>
                 `;
                 bookedTicketsTable.appendChild(tr);
             });
             
-            // Reattach listeners
             document.querySelectorAll('.view-ticket-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                      const ticket = bookedTickets.find(t => t.id === e.target.dataset.id);
@@ -1169,50 +862,71 @@
             });
         }
         
-        // Preview Update
         function updateTicketPreview(ticket) {
             document.getElementById('ticketName').textContent = ticket.name;
             document.getElementById('ticketAgeGender').textContent = `${ticket.age} / ${ticket.gender}`;
             document.getElementById('ticketPhone').textContent = ticket.phone;
-            document.getElementById('ticketSerial').textContent = ticket.id;
+            document.getElementById('ticketSerial').textContent = `ID: ${ticket.id}`;
             
             const qrcodeContainer = document.getElementById('qrcode');
             qrcodeContainer.innerHTML = '';
             new QRCode(qrcodeContainer, {
                 text: ticket.id,
-                width: 128, height: 128,
+                width: 100, height: 100,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
             document.getElementById('whatsappBtn').disabled = false;
         }
 
-        // WhatsApp Share / Download Logic with Unique Filename
+        // WhatsApp Share & Download Logic
         document.getElementById('whatsappBtn').addEventListener('click', () => {
+            const btn = document.getElementById('whatsappBtn');
+            const originalText = btn.textContent;
+            btn.textContent = "Processing...";
+            btn.disabled = true;
+
             const ticketTemplate = document.getElementById('ticketTemplate');
-            html2canvas(ticketTemplate, { scale: 3 }).then(canvas => {
-                // Generate ddmmyyyyhhmmss timestamp
+            const originalBorder = ticketTemplate.style.border;
+            ticketTemplate.style.border = 'none'; // Clean capture
+            
+            html2canvas(ticketTemplate, { 
+                scale: 3,
+                backgroundColor: "#000000",
+                useCORS: true 
+            }).then(canvas => {
+                ticketTemplate.style.border = originalBorder; // Restore style
+                
+                // 1. Trigger Download
                 const now = new Date();
                 const pad = (num) => String(num).padStart(2, '0');
-                
-                const dd = pad(now.getDate());
-                const mm = pad(now.getMonth() + 1); // Month is 0-indexed
-                const yyyy = now.getFullYear(); // Full Year (4 digits)
-                const hh = pad(now.getHours());
-                const min = pad(now.getMinutes());
-                const ss = pad(now.getSeconds());
-                
-                const timestamp = `${dd}${mm}${yyyy}${hh}${min}${ss}`;
+                const timestamp = `${pad(now.getDate())}${pad(now.getMonth() + 1)}${now.getFullYear()}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
                 
                 const link = document.createElement('a');
-                link.download = `ticket-${timestamp}.png`; // Unique filename
+                link.download = `ticket-${timestamp}.png`; 
                 link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link); // Required for some browsers
                 link.click();
+                document.body.removeChild(link);
                 
-                // WhatsApp URL
-                const phone = document.getElementById('ticketPhone').textContent.replace('+', '');
-                const name = document.getElementById('ticketName').textContent;
-                const message = encodeURIComponent(`Hello ${name}, here is your event ticket.\n*_[Keep this QR code safe for entry!]_*`);
-                window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+                // 2. Open WhatsApp (Delayed to allow download to start)
+                setTimeout(() => {
+                    const phone = document.getElementById('ticketPhone').textContent.replace(/\D/g,'');
+                    const name = document.getElementById('ticketName').textContent;
+                    const message = encodeURIComponent(`Hello ${name}, here is your VIP Entry Pass.\n(Please attach the downloaded ticket image here)\n*Keep this QR code ready at the entrance.*`);
+                    
+                    // Use location.href to bypass pop-up blockers on mobile
+                    window.location.href = `https://wa.me/${phone}?text=${message}`;
+                    
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }, 1500); 
+            }).catch(err => {
+                console.error(err);
+                alert("Error generating ticket image");
+                btn.textContent = originalText;
+                btn.disabled = false;
             });
         });
 
@@ -1225,7 +939,6 @@
 
         selectBtn.addEventListener('click', () => {
             isSelectionMode = !isSelectionMode;
-            document.querySelector('.tickets-table').classList.toggle('selection-mode', isSelectionMode);
             deleteBtn.style.display = isSelectionMode ? 'inline-block' : 'none';
             selectAllContainer.style.display = isSelectionMode ? 'block' : 'none';
             selectBtn.textContent = isSelectionMode ? 'Cancel' : 'Select';
@@ -1245,7 +958,7 @@
                  selectedIds.push(cb.closest('tr').dataset.id);
              });
              if(selectedIds.length === 0) return alert('Select tickets to delete');
-             if(confirm(`Delete ${selectedIds.length} tickets?`)) {
+             if(confirm(`Permanently delete ${selectedIds.length} entries?`)) {
                  for(const id of selectedIds) {
                      await deleteDoc(doc(db, APP_COLLECTION_ROOT, currentUser.uid, 'tickets', id));
                  }
@@ -1268,8 +981,11 @@
                     scannerVideo.srcObject = stream;
                     scannerVideo.setAttribute("playsinline", true);
                     scannerVideo.play();
-                    startScanBtn.textContent = 'Stop Camera';
-                    scanResult.textContent = 'Scanning...';
+                    startScanBtn.textContent = 'Deactivate Camera';
+                    scanResult.style.display = 'block';
+                    scanResult.style.background = 'rgba(255,255,255,0.1)';
+                    scanResult.style.color = 'white';
+                    scanResult.textContent = 'Searching for QR Code...';
                     requestAnimationFrame(tick);
                 }).catch(err => {
                     alert("Camera error: " + err);
@@ -1279,7 +995,7 @@
         function stopScan() {
             if (scannerVideo.srcObject) scannerVideo.srcObject.getTracks().forEach(t => t.stop());
             scannerVideo.srcObject = null;
-            startScanBtn.textContent = 'Start Camera';
+            startScanBtn.textContent = 'Activate Camera';
         }
 
         function tick() {
@@ -1304,22 +1020,29 @@
 
         async function validateTicket(ticketId) {
              const ticket = bookedTickets.find(t => t.id === ticketId);
+             scanResult.style.display = 'block';
+             
              if(ticket) {
                  if(ticket.status === 'coming-soon' && !ticket.scanned) {
                       await updateDoc(doc(db, APP_COLLECTION_ROOT, currentUser.uid, 'tickets', ticketId), {
                           status: 'arrived', scanned: true, scannedAt: Date.now()
                       });
-                      scanResult.className = 'result-success';
-                      scanResult.textContent = `Valid Ticket! Welcome ${ticket.name}`;
+                      scanResult.style.background = 'rgba(16, 185, 129, 0.2)';
+                      scanResult.style.color = '#10b981';
+                      scanResult.style.border = '1px solid #10b981';
+                      scanResult.textContent = `✅ ACCESS GRANTED: ${ticket.name}`;
                       playBeep();
                  } else {
-                      scanResult.className = 'result-error';
-                      scanResult.textContent = `Error: Ticket already used or invalid status.`;
+                      scanResult.style.background = 'rgba(239, 68, 68, 0.2)';
+                      scanResult.style.color = '#ef4444';
+                      scanResult.style.border = '1px solid #ef4444';
+                      scanResult.textContent = `❌ DENIED: Already Scanned or Invalid Status`;
                       playError();
                  }
              } else {
-                 scanResult.className = 'result-error';
-                 scanResult.textContent = `Invalid Ticket ID`;
+                 scanResult.style.background = 'rgba(239, 68, 68, 0.2)';
+                 scanResult.style.color = '#ef4444';
+                 scanResult.textContent = `❌ DENIED: Invalid Ticket ID`;
                  playError();
              }
         }
@@ -1341,7 +1064,8 @@
              osc.start();
              setTimeout(() => osc.stop(), 300);
         }
-
     </script>
 </body>
 </html>
+
+
