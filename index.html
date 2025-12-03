@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Ticketing System - Cloud Sync</title>
+    <!-- Firebase SDKs are imported as modules in the script below -->
+    
+    <style>
+        :root {
+            --primary-color: #ff6ec7; /* Pink */
+            --secondary-color: #9d4edd; /* Purple */
+            --tertiary-color: #4361ee; /* Blue */
+            --background-color: #1a1a2e; /* Dark blue */
+            --text-color: #e6e6e6;
+            --card-bg: #16213e;
+            --success-color: #4cc9f0; /* Cyan */
+            --warning-color: #f8961e; /* Orange */
+            --danger-color: #f72585; /* Magenta */
+            --light-gray: #2d3047;
+            --dark-accent: #0f1419;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--background-color), var(--dark-accent));
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none; /* Hidden until logged in */
+        }
+
+        /* --- Login Overlay --- */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--background-color), var(--dark-accent));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 110, 199, 0.3);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), var(--tertiary-color));
+        }
+
+        .login-box h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            font-size: 2rem;
+        }
+
+        .login-box p {
+            margin-bottom: 2rem;
+            color: #aaa;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+
+        .login-box button:hover {
+            transform: scale(1.02);
+        }
+        
+        #auth-error {
+            color: var(--danger-color);
+            margin-top: 15px;
+            display: none;
+        }
+
+        /* --- Header & Nav --- */
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        header h1 {
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(255, 110, 199, 0.5);
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .user-info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color);
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .logout-btn:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .sync-status {
+            font-size: 0.9rem;
+            color: var(--success-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sync-dot {
+            width: 10px;
+            height: 10px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--success-color);
+            animation: pulse-dot 2s infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0% { opacity: 0.5; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 0.5; transform: scale(0.9); }
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            background-color: rgba(22, 33, 62, 0.8);
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 110, 199, 0.2);
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            color: var(--text-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 110, 199, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-btn:hover::before {
+            left: 100%;
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 110, 199, 0.5);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Form and Ticket --- */
+        .form-and-ticket {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        form {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 110, 199, 0.1);
+        }
+
+        form h2 {
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        form input, form select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 110, 199, 0.3);
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        form input:focus, form select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(255, 110, 199, 0.3);
+        }
+
+        .phone-input {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .phone-input span {
+            padding: 12px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--tertiary-color));
+            border: 1px solid rgba(255, 110, 199, 0.3);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            color: white;
+            height: 44px;
+            display: flex;
+            align-items: center;
+        }
+        .phone-input input {
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 0;
+            flex: 1;
+        }
+
+        form button, .booked-controls button, .ticket-actions button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(157, 78, 221, 0.3);
+        }
+
+        form button:hover, .booked-controls button:hover, .ticket-actions button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(157, 78, 221, 0.5);
+        }
+        .ticket-actions button:disabled {
+            background: var(--light-gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .ticket-preview-container {
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 110, 199, 0.1);
+        }
+
+        #ticketTemplate {
+            border: 2px dashed var(--primary-color);
+            border-radius: 15px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--card-bg), var(--light-gray));
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        #ticketTemplate::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,110,199,0.1) 0%, rgba(157,78,221,0.05) 50%, transparent 70%);
+            animation: pulse 4s infinite linear;
+            z-index: 0;
+        }
+
+        @keyframes pulse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .ticket-header, .ticket-footer {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .ticket-header {
+            border-bottom: 1px solid rgba(255, 110, 199, 0.3);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .ticket-footer {
+            border-top: 1px solid rgba(255, 110, 199, 0.3);
+            padding-top: 10px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .ticket-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ticket-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ticket-details div {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ticket-details strong {
+            min-width: 80px;
+            color: var(--primary-color);
+        }
+
+        .ticket-qr {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px;
+            min-height: 140px;
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-left: 10px;
+        }
+        #qrcode img {
+            width: 120px;
+            height: 120px;
+        }
+
+        .ticket-serial {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #777;
+            text-align: center;
+            word-break: break-all;
+        }
+
+        .ticket-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* --- Booked Tickets Tab --- */
+        #booked h2, #scanner h2, #settings h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .booked-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .booked-controls button { 
+            width: auto; 
+            padding: 10px 20px; 
+            border-radius: 8px;
+        }
+        #deleteBtn { 
+            background: linear-gradient(135deg, var(--danger-color), #b5179e);
+        }
+        #deleteBtn:hover { 
+            box-shadow: 0 6px 20px rgba(247, 37, 133, 0.5);
+        }
+
+        /* Table style for booked tickets */
+        .tickets-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .tickets-table th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .tickets-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 110, 199, 0.1);
+        }
+
+        .tickets-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tickets-table tr:hover {
+            background-color: rgba(255, 110, 199, 0.05);
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            display: inline-block;
+            min-width: 100px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            font-size: 0.85rem;
+        }
+
+        .status-coming-soon { 
+            background: linear-gradient(135deg, var(--warning-color), #f3722c);
+        }
+        .status-arrived { 
+            background: linear-gradient(135deg, var(--success-color), #4895ef);
+        }
+        .status-didnt-come { 
+            background: linear-gradient(135deg, var(--danger-color), #b5179e);
+        }
+
+        .view-ticket-btn {
+            padding: 6px 12px;
+            background: linear-gradient(135deg, var(--tertiary-color), #3a0ca3);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: auto;
+        }
+
+        .view-ticket-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.5);
+        }
+
+        .select-all-container {
+            padding: 10px;
+            background: var(--light-gray);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        /* --- Settings Tab --- */
+        .settings-form {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 110, 199, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .settings-form h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .settings-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .settings-form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 110, 199, 0.3);
+            border-radius: 8px;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+        }
+
+        .settings-form button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(157, 78, 221, 0.3);
+            margin-bottom: 1rem;
+        }
+
+        .settings-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(157, 78, 221, 0.5);
+        }
+
+        .current-settings {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--light-gray);
+            border-radius: 10px;
+        }
+
+        .current-settings h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        /* --- Scanner --- */
+        #scanner-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 1rem auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        #scanner-video {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 15px;
+        }
+
+        .scanner-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 70%;
+            height: 50%;
+            transform: translate(-50%, -50%);
+            border: 3px solid rgba(255, 110, 199, 0.8);
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.5);
+            border-radius: 10px;
+        }
+
+        #startScanBtn {
+            display: block;
+            margin: 1rem auto;
+            width: auto;
+            padding: 10px 30px;
+            border-radius: 8px;
+        }
+
+        #scanResult {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .result-success { 
+            background: linear-gradient(135deg, rgba(76, 201, 240, 0.2), rgba(72, 149, 239, 0.2)); 
+            color: #4cc9f0;
+            border: 1px solid rgba(76, 201, 240, 0.3);
+        }
+
+        .result-error { 
+            background: linear-gradient(135deg, rgba(247, 37, 133, 0.2), rgba(181, 23, 158, 0.2)); 
+            color: #f72585;
+            border: 1px solid rgba(247, 37, 133, 0.3);
+        }
+
+        .result-info { 
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.2), rgba(58, 12, 163, 0.2)); 
+            color: var(--tertiary-color);
+            border: 1px solid rgba(67, 97, 238, 0.3);
+        }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            .form-and-ticket {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                flex-wrap: wrap;
+            }
+            
+            .tickets-table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .ticket-body {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .ticket-qr {
+                margin: 15px 0 0 0;
+            }
+            
+            .ticket-details div {
+                justify-content: center;
+            }
+        }
+
+        /* Floating Elements */
+        .floating-element {
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255,110,199,0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+            animation: float 15s infinite linear;
+        }
+
+        .floating-element:nth-child(1) { top: 10%; left: 5%; width: 150px; height: 150px; animation-duration: 20s; }
+        .floating-element:nth-child(2) { top: 70%; right: 10%; width: 120px; height: 120px; animation-duration: 25s; animation-delay: 5s; }
+        .floating-element:nth-child(3) { bottom: 20%; left: 15%; width: 80px; height: 80px; animation-duration: 18s; animation-delay: 10s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(20px, 20px) rotate(90deg); }
+            50% { transform: translate(0, 40px) rotate(180deg); }
+            75% { transform: translate(-20px, 20px) rotate(270deg); }
+            100% { transform: translate(0, 0) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-element"></div>
+    <div class="floating-element"></div>
+    <div class="floating-element"></div>
+
+    <!-- Login Overlay -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>Team Login</h2>
+            <p>Log in to access your event dashboard. Use the same account on all devices to sync data.</p>
+            <input type="email" id="emailInput" placeholder="Email Address">
+            <input type="password" id="passwordInput" placeholder="Password">
+            <button id="loginButton">Log In / Sign Up</button>
+            <p id="auth-error"></p>
+            <p style="margin-top: 15px; font-size: 0.8rem; color: #666;">
+                *If you are new, this will create an account for you automatically.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container" id="appContent">
+        <header>
+            <h1>Event Ticketing System</h1>
+            <div class="user-info-bar">
+                <div class="sync-status">
+                    <span class="sync-dot"></span> <span id="syncText">Connected as <span id="userEmailDisplay">...</span></span>
+                </div>
+                <button id="logoutBtn" class="logout-btn">Log Out</button>
+            </div>
+            <nav>
+                <button class="nav-btn active" data-tab="create">Create Ticket</button>
+                <button class="nav-btn" data-tab="booked">Booked Tickets</button>
+                <button class="nav-btn" data-tab="scanner">Validate Entry</button>
+                <button class="nav-btn" data-tab="settings">Settings</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Create Ticket -->
+            <div id="create" class="tab-content active">
+                <div class="form-and-ticket">
+                    <form id="ticketForm">
+                        <h2>Enter Attendee Details</h2>
+                        <input type="text" id="name" placeholder="Full Name" required>
+                        <select id="gender" required>
+                            <option value="" disabled selected>Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <input type="number" id="age" placeholder="Age" required min="1">
+                        <div class="phone-input">
+                            <span>+91</span>
+                            <input type="tel" id="phone" placeholder="Phone Number (10 digits)" required pattern="[0-9]{10}">
+                        </div>
+                        <button type="submit" style="margin-top: 15px !important;">Generate Ticket</button>
+                    </form>
+
+                    <div class="ticket-preview-container">
+                        <h2>Ticket Preview</h2>
+                        <div id="ticketTemplate">
+                            <div class="ticket-header">
+                                <h3>EVENT ENTRY PASS</h3>
+                                <p id="eventNamePlace"></p>
+                            </div>
+                            <div class="ticket-body">
+                                <div class="ticket-details">
+                                    <div><span id="ticketName"></span></div>
+                                    <div><span id="ticketAgeGender"></span></div>
+                                    <div><span id="ticketPhone"></span></div>
+                                </div>
+                                <div class="ticket-qr">
+                                    <div id="qrcode"></div>
+                                    <div class="ticket-serial" id="ticketSerial"></div>
+                                </div>
+                            </div>
+                            <div class="ticket-footer">
+                                <p>Please present this ticket at the entry.</p>
+                            </div>
+                        </div>
+                        <div class="ticket-actions">
+                            <button id="whatsappBtn" disabled>Share on WhatsApp</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booked Tickets -->
+            <div id="booked" class="tab-content">
+                <h2>All Booked Tickets</h2>
+                <div class="booked-controls">
+                    <button id="selectBtn">Select</button>
+                    <button id="deleteBtn" style="display: none;">Delete Selected</button>
+                </div>
+                <div class="select-all-container" style="display: none;">
+                    <input type="checkbox" id="selectAllCheckbox">
+                    <label for="selectAllCheckbox">Select All</label>
+                </div>
+                
+                <table class="tickets-table">
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Name</th>
+                            <th>Age/Gender</th>
+                            <th>Phone</th>
+                            <th>Ticket ID</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookedTicketsTable">
+                        <tr><td colspan="7" style="text-align:center; padding: 20px;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Scanner -->
+            <div id="scanner" class="tab-content">
+                <h2>QR Code Scanner</h2>
+                <div id="scanner-container">
+                    <video id="scanner-video" playsinline></video>
+                    <div class="scanner-box"></div>
+                </div>
+                <button id="startScanBtn">Start Camera</button>
+                <div id="scanResult">Point camera at a QR code...</div>
+            </div>
+            
+            <!-- Settings -->
+            <div id="settings" class="tab-content">
+                <h2>Event Settings</h2>
+                <div class="settings-form">
+                    <h3>Configure Event Details</h3>
+                    <form id="eventSettingsForm">
+                        <label for="eventName">Event Name</label>
+                        <input type="text" id="eventName" placeholder="Enter event name">
+                        <label for="eventPlace">Event Place</label>
+                        <input type="text" id="eventPlace" placeholder="Enter event place">
+                        <label for="arrivalDeadline">Arrival Deadline</label>
+                        <input type="datetime-local" id="arrivalDeadline">
+                        <button type="submit">Save Settings to Cloud</button>
+                    </form>
+                    <div class="current-settings">
+                        <h4>Current Settings (Synced)</h4>
+                        <p><strong>Event Name:</strong> <span id="currentEventName">Loading...</span></p>
+                        <p><strong>Event Place:</strong> <span id="currentEventPlace">Loading...</span></p>
+                        <p><strong>Arrival Deadline:</strong> <span id="currentDeadline">Loading...</span></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, query, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==========================================
+        // FIREBASE CONFIGURATION (Auto-filled)
+        // ==========================================
+        const firebaseConfig = {
+          apiKey: "AIzaSyBYzmAZQ8sKHjXgVh_t-vbtYN_gRzBstw8",
+          authDomain: "ticket-backend-5ee83.firebaseapp.com",
+          projectId: "ticket-backend-5ee83",
+          storageBucket: "ticket-backend-5ee83.firebasestorage.app",
+          messagingSenderId: "370130815796",
+          appId: "1:370130815796:web:33df8249fcc68ddc0f7361",
+          measurementId: "G-CED9W20PBK"
+        };
+        
+        // --- INIT FIREBASE ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Root collection for your events
+        const APP_COLLECTION_ROOT = 'ticket_events_data'; 
+
+        let currentUser = null;
+        let ticketsUnsubscribe = null;
+        let settingsUnsubscribe = null;
+
+        // --- DOM ELEMENTS ---
+        const loginOverlay = document.getElementById('login-overlay');
+        const appContent = document.getElementById('appContent');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginButton = document.getElementById('loginButton');
+        const authError = document.getElementById('auth-error');
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // --- AUTHENTICATION LOGIC ---
+        
+        // 1. Check Auth State
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Logged In
+                currentUser = user;
+                userEmailDisplay.textContent = user.email;
+                loginOverlay.style.display = 'none';
+                appContent.style.display = 'block';
+                setupRealtimeListeners(user.uid);
+            } else {
+                // Logged Out
+                currentUser = null;
+                loginOverlay.style.display = 'flex';
+                appContent.style.display = 'none';
+                // Stop listening
+                if (ticketsUnsubscribe) ticketsUnsubscribe();
+                if (settingsUnsubscribe) settingsUnsubscribe();
+            }
+        });
+
+        // 2. Login/Register Handler
+        loginButton.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            authError.style.display = 'none';
+            loginButton.textContent = "Processing...";
+            loginButton.disabled = true;
+
+            if (!email || !password) {
+                showError("Please enter email and password.");
+                return;
+            }
+
+            try {
+                // Try to sign in first
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    // If user not found, try to register
+                    try {
+                         await createUserWithEmailAndPassword(auth, email, password);
+                         // Registration auto-logs in, so onAuthStateChanged will trigger
+                    } catch (regError) {
+                        showError(getReadableError(regError));
+                    }
+                } else {
+                    showError(getReadableError(error));
+                }
+            } finally {
+                 loginButton.textContent = "Log In / Sign Up";
+                 loginButton.disabled = false;
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+             signOut(auth);
+        });
+
+        function showError(msg) {
+            authError.textContent = msg;
+            authError.style.display = 'block';
+            loginButton.textContent = "Log In / Sign Up";
+            loginButton.disabled = false;
+        }
+
+        function getReadableError(error) {
+            if (error.code === 'auth/weak-password') return 'Password should be at least 6 characters.';
+            if (error.code === 'auth/email-already-in-use') return 'Email already exists. Please check password.';
+            if (error.code === 'auth/invalid-email') return 'Invalid email address.';
+            return error.message;
+        }
+
+        // --- APP LOGIC ---
+        
+        let bookedTickets = [];
+        let eventSettings = { name: '', place: '', deadline: '' };
+
+        function setupRealtimeListeners(userId) {
+            // Path: ticket_events_data/{userId}/tickets
+            // This ensures data is private to this account, but shared across devices logged into this account
+            const ticketsRef = collection(db, APP_COLLECTION_ROOT, userId, 'tickets');
+            const q = query(ticketsRef); 
+
+            ticketsUnsubscribe = onSnapshot(q, (snapshot) => {
+                bookedTickets = [];
+                snapshot.forEach((doc) => {
+                    bookedTickets.push({ id: doc.id, ...doc.data() });
+                });
+                bookedTickets.sort((a, b) => b.createdAt - a.createdAt); // Newest first
+                renderBookedTickets();
+            });
+
+            const settingsRef = doc(db, APP_COLLECTION_ROOT, userId, 'settings', 'config');
+            settingsUnsubscribe = onSnapshot(settingsRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    eventSettings = docSnap.data();
+                    updateSettingsDisplay();
+                } else {
+                    eventSettings = { name: '', place: '', deadline: '' };
+                    updateSettingsDisplay();
+                }
+            });
+        }
+
+        // --- UI HANDLERS ---
+        
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const tabs = document.querySelectorAll('.tab-content');
+        
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const scannerVideo = document.getElementById('scanner-video');
+                if (scannerVideo.srcObject && button.dataset.tab !== 'scanner') {
+                    stopScan();
+                }
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                tabs.forEach(tab => {
+                    tab.classList.remove('active');
+                    if (tab.id === button.dataset.tab) {
+                        tab.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // Settings Form
+        const eventSettingsForm = document.getElementById('eventSettingsForm');
+        eventSettingsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            const newSettings = {
+                name: document.getElementById('eventName').value,
+                place: document.getElementById('eventPlace').value,
+                deadline: document.getElementById('arrivalDeadline').value
+            };
+            const settingsRef = doc(db, APP_COLLECTION_ROOT, currentUser.uid, 'settings', 'config');
+            await setDoc(settingsRef, newSettings, { merge: true });
+            alert('Settings Saved!');
+        });
+
+        function updateSettingsDisplay() {
+            document.getElementById('currentEventName').textContent = eventSettings.name || 'Not set';
+            document.getElementById('currentEventPlace').textContent = eventSettings.place || 'Not set';
+            document.getElementById('currentDeadline').textContent = eventSettings.deadline ? new Date(eventSettings.deadline).toLocaleString() : 'Not set';
+            
+            // Update preview
+            document.getElementById('eventNamePlace').textContent = eventSettings.name && eventSettings.place 
+                ? `${eventSettings.name} - ${eventSettings.place}` 
+                : 'Event details not set';
+                
+            // Update inputs
+            document.getElementById('eventName').value = eventSettings.name || '';
+            document.getElementById('eventPlace').value = eventSettings.place || '';
+            document.getElementById('arrivalDeadline').value = eventSettings.deadline || '';
+        }
+
+        // Ticket Form
+        const ticketForm = document.getElementById('ticketForm');
+        ticketForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const name = document.getElementById('name').value;
+            const gender = document.getElementById('gender').value;
+            const age = document.getElementById('age').value;
+            const phone = document.getElementById('phone').value;
+
+            const newTicket = {
+                name, gender, age, 
+                phone: '+91' + phone,
+                status: 'coming-soon',
+                scanned: false,
+                createdAt: Date.now()
+            };
+
+            try {
+                const docRef = await addDoc(collection(db, APP_COLLECTION_ROOT, currentUser.uid, 'tickets'), newTicket);
+                updateTicketPreview({ ...newTicket, id: docRef.id });
+                ticketForm.reset();
+            } catch (err) {
+                console.error(err);
+                alert("Error creating ticket");
+            }
+        });
+
+        // Ticket Rendering
+        const bookedTicketsTable = document.getElementById('bookedTicketsTable');
+        function renderBookedTickets() {
+            bookedTicketsTable.innerHTML = '';
+            if(bookedTickets.length === 0) {
+                bookedTicketsTable.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;">No tickets found.</td></tr>';
+                return;
+            }
+            bookedTickets.forEach(ticket => {
+                const tr = document.createElement('tr');
+                tr.dataset.id = ticket.id;
+                tr.innerHTML = `
+                    <td><div class="checkbox-container"><input type="checkbox" class="ticket-checkbox"></div></td>
+                    <td>${ticket.name}</td>
+                    <td>${ticket.age} / ${ticket.gender}</td>
+                    <td>${ticket.phone}</td>
+                    <td class="serial">${ticket.id.substring(0, 8)}...</td>
+                    <td><span class="status-badge status-${ticket.status}">${ticket.status.replace('-', ' ')}</span></td>
+                    <td><button class="view-ticket-btn" data-id="${ticket.id}">View</button></td>
+                `;
+                bookedTicketsTable.appendChild(tr);
+            });
+            
+            // Reattach listeners
+            document.querySelectorAll('.view-ticket-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                     const ticket = bookedTickets.find(t => t.id === e.target.dataset.id);
+                     if(ticket) {
+                         document.querySelector('[data-tab="create"]').click();
+                         updateTicketPreview(ticket);
+                     }
+                });
+            });
+        }
+        
+        // Preview Update
+        function updateTicketPreview(ticket) {
+            document.getElementById('ticketName').textContent = ticket.name;
+            document.getElementById('ticketAgeGender').textContent = `${ticket.age} / ${ticket.gender}`;
+            document.getElementById('ticketPhone').textContent = ticket.phone;
+            document.getElementById('ticketSerial').textContent = ticket.id;
+            
+            const qrcodeContainer = document.getElementById('qrcode');
+            qrcodeContainer.innerHTML = '';
+            new QRCode(qrcodeContainer, {
+                text: ticket.id,
+                width: 128, height: 128,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            document.getElementById('whatsappBtn').disabled = false;
+        }
+
+        // WhatsApp Share
+        document.getElementById('whatsappBtn').addEventListener('click', () => {
+            const ticketTemplate = document.getElementById('ticketTemplate');
+            html2canvas(ticketTemplate, { scale: 3 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `ticket.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                const phone = document.getElementById('ticketPhone').textContent.replace('+', '');
+                const name = document.getElementById('ticketName').textContent;
+                const message = encodeURIComponent(`Hello ${name}, here is your event ticket.\n*_[Keep this QR code safe for entry!]_*`);
+                window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+            });
+        });
+
+        // Bulk Delete
+        const selectBtn = document.getElementById('selectBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const selectAllContainer = document.querySelector('.select-all-container');
+        let isSelectionMode = false;
+
+        selectBtn.addEventListener('click', () => {
+            isSelectionMode = !isSelectionMode;
+            document.querySelector('.tickets-table').classList.toggle('selection-mode', isSelectionMode);
+            deleteBtn.style.display = isSelectionMode ? 'inline-block' : 'none';
+            selectAllContainer.style.display = isSelectionMode ? 'block' : 'none';
+            selectBtn.textContent = isSelectionMode ? 'Cancel' : 'Select';
+            if(!isSelectionMode) {
+                 document.querySelectorAll('.ticket-checkbox').forEach(cb => cb.checked = false);
+                 selectAllCheckbox.checked = false;
+            }
+        });
+
+        selectAllCheckbox.addEventListener('change', (e) => {
+            document.querySelectorAll('.ticket-checkbox').forEach(cb => cb.checked = e.target.checked);
+        });
+
+        deleteBtn.addEventListener('click', async () => {
+             const selectedIds = [];
+             document.querySelectorAll('.ticket-checkbox:checked').forEach(cb => {
+                 selectedIds.push(cb.closest('tr').dataset.id);
+             });
+             if(selectedIds.length === 0) return alert('Select tickets to delete');
+             if(confirm(`Delete ${selectedIds.length} tickets?`)) {
+                 for(const id of selectedIds) {
+                     await deleteDoc(doc(db, APP_COLLECTION_ROOT, currentUser.uid, 'tickets', id));
+                 }
+                 selectBtn.click();
+             }
+        });
+
+        // Scanner
+        const startScanBtn = document.getElementById('startScanBtn');
+        const scannerVideo = document.getElementById('scanner-video');
+        const scanResult = document.getElementById('scanResult');
+
+        startScanBtn.addEventListener('click', () => {
+            if (scannerVideo.srcObject) stopScan(); else startScan();
+        });
+
+        function startScan() {
+             navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    scannerVideo.srcObject = stream;
+                    scannerVideo.setAttribute("playsinline", true);
+                    scannerVideo.play();
+                    startScanBtn.textContent = 'Stop Camera';
+                    scanResult.textContent = 'Scanning...';
+                    requestAnimationFrame(tick);
+                }).catch(err => {
+                    alert("Camera error: " + err);
+                });
+        }
+        
+        function stopScan() {
+            if (scannerVideo.srcObject) scannerVideo.srcObject.getTracks().forEach(t => t.stop());
+            scannerVideo.srcObject = null;
+            startScanBtn.textContent = 'Start Camera';
+        }
+
+        function tick() {
+             if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
+                  const canvas = document.createElement('canvas');
+                  const ctx = canvas.getContext('2d');
+                  canvas.width = scannerVideo.videoWidth;
+                  canvas.height = scannerVideo.videoHeight;
+                  ctx.drawImage(scannerVideo, 0, 0, canvas.width, canvas.height);
+                  const imageData = ctx.getImageData(0,0, canvas.width, canvas.height);
+                  const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+                  if(code) {
+                       validateTicket(code.data);
+                       stopScan();
+                  } else {
+                       if(scannerVideo.srcObject) requestAnimationFrame(tick);
+                  }
+             } else {
+                  if(scannerVideo.srcObject) requestAnimationFrame(tick);
+             }
+        }
+
+        async function validateTicket(ticketId) {
+             const ticket = bookedTickets.find(t => t.id === ticketId);
+             if(ticket) {
+                 if(ticket.status === 'coming-soon' && !ticket.scanned) {
+                      await updateDoc(doc(db, APP_COLLECTION_ROOT, currentUser.uid, 'tickets', ticketId), {
+                          status: 'arrived', scanned: true, scannedAt: Date.now()
+                      });
+                      scanResult.className = 'result-success';
+                      scanResult.textContent = `Valid Ticket! Welcome ${ticket.name}`;
+                      playBeep();
+                 } else {
+                      scanResult.className = 'result-error';
+                      scanResult.textContent = `Error: Ticket already used or invalid status.`;
+                      playError();
+                 }
+             } else {
+                 scanResult.className = 'result-error';
+                 scanResult.textContent = `Invalid Ticket ID`;
+                 playError();
+             }
+        }
+        
+        function playBeep() { 
+             const ctx = new (window.AudioContext || window.webkitAudioContext)();
+             const osc = ctx.createOscillator();
+             osc.connect(ctx.destination);
+             osc.frequency.value = 800;
+             osc.start();
+             setTimeout(() => osc.stop(), 100);
+        }
+        function playError() {
+             const ctx = new (window.AudioContext || window.webkitAudioContext)();
+             const osc = ctx.createOscillator();
+             osc.type = 'sawtooth';
+             osc.connect(ctx.destination);
+             osc.frequency.value = 150;
+             osc.start();
+             setTimeout(() => osc.stop(), 300);
+        }
+
+    </script>
+</body>
+</html>
+
+
