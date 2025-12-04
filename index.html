@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -62,6 +62,42 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* --- Loading Screen (New) --- */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-deep);
+            z-index: 5000; /* Highest priority */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent-secondary);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
         /* --- Toast Notification System --- */
         #toast-container {
@@ -131,7 +167,7 @@
             width: 100%;
             height: 100%;
             background: var(--bg-deep);
-            display: flex;
+            display: none; /* Changed to NONE by default to prevent flash */
             justify-content: center;
             align-items: center;
             z-index: 2000;
@@ -540,6 +576,12 @@
 </head>
 <body>
 
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <div class="loading-text">Initializing Secure Connection</div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
@@ -754,6 +796,7 @@
 
         // --- DOM ELEMENTS ---
         const loginOverlay = document.getElementById('login-overlay');
+        const loadingScreen = document.getElementById('loading-screen');
         const appContent = document.getElementById('appContent');
         const emailInput = document.getElementById('emailInput');
         const passwordInput = document.getElementById('passwordInput');
@@ -766,8 +809,11 @@
             if (user) {
                 currentUser = user;
                 userEmailDisplay.textContent = user.email;
+                
+                loadingScreen.style.display = 'none';
                 loginOverlay.style.display = 'none';
                 appContent.style.display = 'block';
+                
                 setupRealtimeListeners(user.uid);
                 
                 if(autoCheckInterval) clearInterval(autoCheckInterval);
@@ -775,8 +821,10 @@
                 
             } else {
                 currentUser = null;
+                loadingScreen.style.display = 'none';
                 loginOverlay.style.display = 'flex';
                 appContent.style.display = 'none';
+                
                 if (ticketsUnsubscribe) ticketsUnsubscribe();
                 if (settingsUnsubscribe) settingsUnsubscribe();
                 if (autoCheckInterval) clearInterval(autoCheckInterval);
