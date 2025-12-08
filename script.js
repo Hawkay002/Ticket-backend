@@ -109,6 +109,11 @@ const unlockError = document.getElementById('unlock-error');
 const cancelUnlockBtn = document.getElementById('cancelUnlock');
 const confirmUnlockBtn = document.getElementById('confirmUnlock');
 
+// Ticket View Modal Elements
+const ticketViewModal = document.getElementById('ticket-view-modal');
+const closeTicketModal = document.getElementById('closeTicketModal');
+const modalWhatsAppBtn = document.getElementById('modalWhatsAppBtn');
+
 // Security Setting Elements
 const lockPasswordInput = document.getElementById('lockSettingPassword');
 const toggleLockPassword = document.getElementById('toggleLockPassword');
@@ -534,7 +539,7 @@ function applySecurityLocks() {
         });
         lockPasswordInput.disabled = false;
         lockSystemBtn.disabled = false;
-        lockSystemBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Lock This Device';
+        lockSystemBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Lock Tabs';
     }
 }
 
@@ -737,6 +742,7 @@ function updateSettingsDisplay() {
     document.getElementById('eventName').value = eventSettings.name || '';
     document.getElementById('eventPlace').value = eventSettings.place || '';
     document.getElementById('arrivalDeadline').value = eventSettings.deadline || '';
+    document.getElementById('modalEventNamePlace').textContent = eventSettings.name && eventSettings.place ? `${eventSettings.name} | ${eventSettings.place}` : 'EVENT DETAILS';
 }
 
 const ticketForm = document.getElementById('ticketForm');
@@ -832,14 +838,24 @@ function renderBookedTickets() {
         btn.addEventListener('click', (e) => {
             const ticket = bookedTickets.find(t => t.id === e.target.dataset.id);
             if(ticket) {
-                // Local Security Check for Create Tab
-                if(localLockState.isLocked && localLockState.lockedTabs.includes('create')) {
-                    showToast("Access Denied", "Issue Ticket tab is locked on this device.");
-                    return;
-                }
+                // MODAL PREVIEW LOGIC (Independent of Create Tab Lock)
+                document.getElementById('modalTicketName').textContent = ticket.name;
+                document.getElementById('modalTicketAgeGender').textContent = `${ticket.age} / ${ticket.gender}`;
+                document.getElementById('modalTicketPhone').textContent = ticket.phone;
+                document.getElementById('modalTicketSerial').textContent = `ID: ${ticket.id}`;
+                
+                const modalQrcodeContainer = document.getElementById('modalQrcode');
+                modalQrcodeContainer.innerHTML = '';
+                new QRCode(modalQrcodeContainer, {
+                    text: ticket.id,
+                    width: 100,
+                    height: 100,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
 
-                document.querySelector('[data-tab="create"]').click();
-                updateTicketPreview(ticket);
+                ticketViewModal.style.display = 'flex';
             }
         });
     });
@@ -856,6 +872,58 @@ function renderBookedTickets() {
         });
     });
 }
+
+// Modal WhatsApp Share
+modalWhatsAppBtn.addEventListener('click', () => {
+    const btn = modalWhatsAppBtn;
+    const originalContent = btn.innerHTML;
+    btn.textContent = "Processing...";
+    btn.disabled = true;
+
+    const ticketTemplate = document.getElementById('modalTicketTemplate');
+    const originalBorder = ticketTemplate.style.border;
+    ticketTemplate.style.border = 'none';
+
+    html2canvas(ticketTemplate, {
+        scale: 3,
+        backgroundColor: null, 
+        useCORS: true
+    }).then(canvas => {
+        ticketTemplate.style.border = originalBorder;
+        
+        const now = new Date();
+        const pad = (num) => String(num).padStart(2, '0');
+        const timestamp = `${pad(now.getDate())}${pad(now.getMonth() + 1)}${now.getFullYear()}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        
+        const link = document.createElement('a');
+        link.download = `ticket-${timestamp}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        setTimeout(() => {
+            const phone = document.getElementById('modalTicketPhone').textContent.replace(/\D/g,'');
+            const name = document.getElementById('modalTicketName').textContent;
+            const message = encodeURIComponent(`Hello ${name}, here is your Entry Pass 🎫.\n*Keep this QR code ready at the entrance.*`);
+            window.location.href = `https://wa.me/${phone}?text=${message}`;
+            
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+        }, 1500);
+
+    }).catch(err => {
+        console.error(err);
+        alert("Error generating ticket image");
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    });
+});
+
+closeTicketModal.addEventListener('click', () => {
+    ticketViewModal.style.display = 'none';
+});
+
 
 function updateTicketPreview(ticket) {
     document.getElementById('ticketName').textContent = ticket.name;
